@@ -3,8 +3,9 @@ package main
 import (
 	"log/slog"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/jeancarloshp/desafio-frete-rapido/internal/quote"
 	"github.com/jeancarloshp/desafio-frete-rapido/pkg/config"
+	fastdeliveryapi "github.com/jeancarloshp/desafio-frete-rapido/pkg/fastdelivery_api"
 	"github.com/jeancarloshp/desafio-frete-rapido/pkg/logger"
 	"github.com/jeancarloshp/desafio-frete-rapido/pkg/server"
 )
@@ -18,12 +19,16 @@ func init() {
 
 func main() {
 	app := server.New(cfg)
+	v1 := app.Group("/v1")
 
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Hello, World!")
-	})
+	fastDeliveryAPI := fastdeliveryapi.New(cfg)
+
+	quoteController := quote.NewQuoteController(cfg, fastDeliveryAPI)
+	quoteHandler := quote.NewQuoteHandler(quoteController)
+
+	v1.Post("/quote", quoteHandler.QuoteSimulationHandler)
 
 	if err := app.Listen(":" + cfg.AppPort); err != nil {
-		slog.Error("Failed to start server", "error", err)
+		slog.Error("failed to start server", "error", err)
 	}
 }

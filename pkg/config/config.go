@@ -20,6 +20,12 @@ type Config struct {
 	HTTPCorsAllowedHeaders string `mapstructure:"HTTP_CORS_ALLOWED_HEADERS"`
 	HTTPCorsAllowedMethods string `mapstructure:"HTTP_CORS_ALLOWED_METHODS"`
 	HTTPCorsAllowedOrigins string `mapstructure:"HTTP_CORS_ALLOWED_ORIGINS"`
+
+	FastDeliveryAPIBaseURL      string `mapstructure:"FASTDELIVERY_API_BASE_URL"`
+	FastDeliveryAPIToken        string `mapstructure:"FASTDELIVERY_API_TOKEN"`
+	FastDeliveryAPIPlatformCode string `mapstructure:"FASTDELIVERY_API_PLATFORM_CODE"`
+	FastDeliveryAPISenderCNPJ   string `mapstructure:"FASTDELIVERY_API_SENDER_CNPJ"`
+	FastDeliveryAPIZipCode      int    `mapstructure:"FASTDELIVERY_API_ZIP_CODE"`
 }
 
 func New() *Config {
