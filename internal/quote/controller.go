@@ -72,7 +72,7 @@ func (qc *QuoteController) Process(quoteRequest QuoteRequest) (*QuoteResponse, e
 	for i, o := range quoteResponse.Dispatchers[0].Offers {
 		carriers[i] = Carrier{
 			Name:     o.Carrier.Name,
-			Price:    o.CostPrice,
+			Price:    o.FinalPrice,
 			Service:  o.Service,
 			Deadline: o.DeliveryTime.Days,
 		}
