@@ -1,6 +1,18 @@
 services:
+  frete_rapido:
+    image: frete_rapido_app
+    hostname: frete_rapido
+    container_name: frete_rapido
+    restart: always
+    ports:
+      - 8080:8080
+    env_file:
+      - .env.local
+    depends_on:
+      - postgres
+
   postgres:
-    image: docker.io/postgres
+    image: docker.io/postgres:15.4-alpine
     hostname: postgres
     container_name: postgres
     restart: always

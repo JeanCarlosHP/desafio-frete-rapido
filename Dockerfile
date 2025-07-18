@@ -1,4 +1,4 @@
-FROM golang:1.24.1-alpine AS build
+FROM golang:1.24.4-alpine AS build
 
 WORKDIR /app
 
@@ -11,9 +11,6 @@ RUN apk add --no-cache ca-certificates
 COPY . .
 
 RUN go build -ldflags="-s -w" -o app ./cmd/main.go
-
-# FROM build AS test-stage
-# RUN go test -v ./...
 
 FROM scratch AS final
 
