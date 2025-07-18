@@ -1,0 +1,35 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    queries: "pkg/database/queries"
+    schema: "pkg/database/schemas"
+    gen:
+      go:
+        package: "querier"
+        out: "pkg/database/querier"
+        sql_package: "pgx/v5"
+        emit_pointers_for_null_types: true
+        overrides:
+        # - db_type: "pg_catalog.timestamp"
+        #   nullable: true
+        #   go_type:
+        #     import: "time"
+        #     type: "Time"
+        #     pointer: true
+        # - db_type: "pg_catalog.timestamp"
+        #   go_type:
+        #     import: "time"
+        #     type: "Time"
+        # - column: "vehicles.refueling_card"
+        #   go_type:
+        #     type: "bool"
+        #     pointer: true
+        # - db_type: "serial"
+        #   go_type:
+        #     type: "int"
+        - db_type: "pg_catalog.int4" # int32 to int
+          go_type:
+            type: "int"
+        - db_type: "pg_catalog.numeric" # numeric to float64
+          go_type:
+            type: "float64"

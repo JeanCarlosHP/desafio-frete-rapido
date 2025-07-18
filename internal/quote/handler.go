@@ -33,7 +33,7 @@ func (qh *QuoteHandler) QuoteSimulationHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	quoteResponse, err := qh.quoteController.Process(quoteRequest)
+	quoteResponse, err := qh.quoteController.SimulateQuote(quoteRequest)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   "failed to process quote request",
@@ -42,4 +42,24 @@ func (qh *QuoteHandler) QuoteSimulationHandler(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(quoteResponse)
+}
+
+func (qh *QuoteHandler) QuoteMetricsHandler(c *fiber.Ctx) error {
+	lastQuotes := c.QueryInt("last_quotes", 10)
+
+	if lastQuotes < 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "last_quotes must be a positive integer",
+		})
+	}
+
+	metrics, err := qh.quoteController.QuoteMetrics(lastQuotes)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error":   "failed to retrieve quote metrics",
+			"details": err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(metrics)
 }

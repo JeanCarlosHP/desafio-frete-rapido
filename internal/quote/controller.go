@@ -1,6 +1,7 @@
 package quote
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/jeancarloshp/desafio-frete-rapido/pkg/config"
@@ -9,18 +10,20 @@ import (
 )
 
 type QuoteController struct {
-	cfg *config.Config
-	api *fastdeliveryapi.FastDeliveryAPI
+	cfg             *config.Config
+	quoteRepository *QuoteRepository
+	api             *fastdeliveryapi.FastDeliveryAPI
 }
 
-func NewQuoteController(cfg *config.Config, api *fastdeliveryapi.FastDeliveryAPI) *QuoteController {
+func NewQuoteController(cfg *config.Config, quoteRepository *QuoteRepository, api *fastdeliveryapi.FastDeliveryAPI) *QuoteController {
 	return &QuoteController{
-		cfg: cfg,
-		api: api,
+		cfg:             cfg,
+		quoteRepository: quoteRepository,
+		api:             api,
 	}
 }
 
-func (qc *QuoteController) Process(quoteRequest QuoteRequest) (*QuoteResponse, error) {
+func (qc *QuoteController) SimulateQuote(quoteRequest QuoteRequest) (*QuoteResponse, error) {
 	zipcode, err := strconv.Atoi(quoteRequest.Recipient.Address.ZipCode)
 	if err != nil {
 		return nil, err
@@ -78,9 +81,66 @@ func (qc *QuoteController) Process(quoteRequest QuoteRequest) (*QuoteResponse, e
 		}
 	}
 
+	for _, c := range carriers {
+		err := qc.quoteRepository.SaveQuote(c)
+		if err != nil {
+			return nil, fmt.Errorf("failed to save quote: %w", err)
+		}
+	}
+
 	response := &QuoteResponse{
 		Carriers: carriers,
 	}
 
 	return response, nil
+}
+
+func (qc *QuoteController) QuoteMetrics(lastQuotes int) (QuoteMetrics, error) {
+	quotes, err := qc.quoteRepository.FindQuotesByLastQuote(lastQuotes)
+	if err != nil {
+		return QuoteMetrics{}, fmt.Errorf("failed to find last quotes: %w", err)
+	}
+
+	if len(quotes) == 0 {
+		return QuoteMetrics{}, nil
+	}
+
+	var totalPrice float64
+	carrierQuotesMap := make(map[string]*CarrierQuotes)
+
+	for _, quote := range quotes {
+		totalPrice += quote.Price
+
+		if _, exists := carrierQuotesMap[quote.Name]; !exists {
+			carrierQuotesMap[quote.Name] = &CarrierQuotes{
+				CarrierName: quote.Name,
+			}
+		}
+
+		carrierQuote := carrierQuotesMap[quote.Name]
+		carrierQuote.TotalQuotes++
+		carrierQuote.TotalPrice += quote.Price
+	}
+
+	var cheapestShipping, highestShipping float64
+	for _, cq := range carrierQuotesMap {
+		cq.AveragePrice = cq.TotalPrice / float64(cq.TotalQuotes)
+		if cheapestShipping == 0 || cq.AveragePrice < cheapestShipping {
+			cheapestShipping = cq.AveragePrice
+		}
+		if cq.AveragePrice > highestShipping {
+			highestShipping = cq.AveragePrice
+		}
+	}
+
+	carrierQuotesSlice := make([]CarrierQuotes, 0, len(carrierQuotesMap))
+	for _, cq := range carrierQuotesMap {
+		carrierQuotesSlice = append(carrierQuotesSlice, *cq)
+	}
+
+	return QuoteMetrics{
+		CarrierQuotes:    carrierQuotesSlice,
+		CheapestShipping: cheapestShipping,
+		HighestShipping:  highestShipping,
+	}, nil
 }

@@ -34,3 +34,16 @@ type Carrier struct {
 	Deadline int     `json:"deadline"`
 	Price    float64 `json:"price"`
 }
+
+type QuoteMetrics struct {
+	CarrierQuotes    []CarrierQuotes `json:"carrier_quotes"`
+	CheapestShipping float64         `json:"cheapest_shipping"`
+	HighestShipping  float64         `json:"highest_shipping"`
+}
+
+type CarrierQuotes struct {
+	CarrierName  string  `json:"carrier_name"`
+	TotalQuotes  int     `json:"total_quotes"`
+	TotalPrice   float64 `json:"total_price"`
+	AveragePrice float64 `json:"average_price"`
+}
